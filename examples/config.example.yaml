@@ -1,0 +1,118 @@
+# Example configuration for codex-co-reviewer.
+# Copy this into your local config directory and adapt it:
+#   ~/.config/codex-co-reviewer/config.yaml
+
+github:
+  # Optional. If set, codex-co-reviewer verifies that `gh` is authenticated as
+  # this user. If omitted, it uses `gh api user --jq .login`.
+  username: your-github-username
+
+scheduler:
+  intervalSeconds: 120
+  jitterSeconds: 20
+
+rateLimit:
+  minRemainingGraphqlPoints: 500
+  minRemainingRestRequests: 500
+  backoffOnSecondaryLimit: true
+
+daemon:
+  defaultStartMode: background
+  stopBehavior: fast
+  stopGraceSeconds: 10
+  noGithubWriteAfterStopRequested: true
+
+concurrency:
+  global: 2
+  perProject: 1
+  perPullRequest: 1
+
+reviewer:
+  backend: codex_cli
+
+backends:
+  codex_cli:
+    command: codex
+    auth: oauth
+    model: default
+    timeoutSeconds: 1800
+
+  openai_api:
+    enabled: false
+    apiKeyEnv: OPENAI_API_KEY
+    model: gpt-5.2
+
+artifacts:
+  store: true
+  storeInput: true
+  redaction: true
+  retentionDays: 30
+
+projects:
+  - id: "{PROJECT_ID}"
+    repo: "{OWNER}/{REPO}"
+    localPath: "/Users/{USER}/Workspace/{REPO}"
+    promptFile: "profiles/{PROJECT_ID}/review.md"
+
+    contextFiles:
+      - README.md
+      - CONTRIBUTING.md
+      - docs/review-guidelines.md
+
+    triggers:
+      reviewRequested: true
+      readyForReview: true
+      rereviewRequestedAfterMyChangesRequested: true
+      reopenedWithMeStillRequested: true
+      catchUpOnStart: true
+      manual: true
+
+    policy:
+      skipDraft: true
+      autoApprove: false
+      duplicateReviewBehavior: skip_same_head_sha
+
+    rereview:
+      requiresMyLatestReviewState: CHANGES_REQUESTED
+      requiresRequestedReviewerIsMe: true
+      requiresHeadShaChanged: true
+      sameHeadShaBehavior: skip_and_log
+
+    setup:
+      onFailure: log_only_skip_review
+      commands:
+        - name: install
+          command: npm ci
+          runWhen:
+            - first_worktree_use
+            - lockfile_changed
+          timeoutSeconds: 600
+
+    verification:
+      githubCi:
+        enabled: true
+        pendingTimeoutSeconds: 300
+        onFailure: request_changes_and_skip_deep_review
+
+      local:
+        mode: lightweight
+        commands:
+          - name: lint
+            command: npm run lint
+            timeoutSeconds: 300
+        failureOutput:
+          includeInReview: true
+          maxLines: 80
+          redaction: true
+
+    confidence:
+      low:
+        mode: summary_possible_concerns
+        maxPerReview: 3
+        contributesToDecision: false
+        allowInlineQuestionOverride: true
+
+    worktrees:
+      dependencyStrategy: per_worktree
+      cleanupAfterDays: 7
+      maxPerProject: 10

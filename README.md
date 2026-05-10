@@ -1,0 +1,71 @@
+# codex-co-reviewer
+
+Personal GitHub pull request review daemon powered by Codex.
+
+`codex-co-reviewer` runs locally during your workday, watches configured
+repositories for review requests assigned to you, and uses Codex to prepare
+line-specific PR reviews from project-specific local profiles.
+
+## Status
+
+Design scaffold. Implementation has not started yet.
+
+## Goals
+
+- Run as a local background daemon.
+- Use `gh` CLI authentication so reviews are posted as the signed-in user.
+- Poll configured repositories instead of requiring webhooks or tunnels.
+- Keep project profiles in local user config, outside project repositories.
+- Use per-PR review worktrees so the user's working directories are untouched.
+- Post inline comments plus a summary review.
+- Leave deterministic review comments for CI or lightweight check failures
+  without invoking Codex.
+- Store redacted local review artifacts for audit and debugging.
+- Support Codex CLI with OAuth in v1, while leaving room for an OpenAI API
+  backend later.
+
+## Planned Commands
+
+```sh
+codex-co-reviewer init
+codex-co-reviewer start
+codex-co-reviewer start --foreground
+codex-co-reviewer stop
+codex-co-reviewer restart
+codex-co-reviewer status
+codex-co-reviewer doctor
+codex-co-reviewer scan [--project id]
+codex-co-reviewer why owner/repo#123
+codex-co-reviewer project add
+codex-co-reviewer project list
+codex-co-reviewer project validate
+```
+
+## Local Files
+
+Profiles and state are local-only and must not be committed to this repository.
+
+macOS v1 paths:
+
+```text
+~/.config/codex-co-reviewer/config.yaml
+~/.config/codex-co-reviewer/profiles/<project>/review.md
+~/.local/share/codex-co-reviewer/state.sqlite
+~/.local/share/codex-co-reviewer/artifacts/
+~/.local/share/codex-co-reviewer/worktrees/
+~/.local/state/codex-co-reviewer/logs/
+```
+
+Windows support is planned. Path handling should be implemented through a
+platform-aware resolver rather than hard-coded user paths.
+
+## Examples
+
+See:
+
+- `examples/config.example.yaml`
+- `examples/profiles/PROJECT_ID/review.example.md`
+
+Example placeholders are written in braces, such as `{PROJECT_ID}` and
+`{OWNER}/{REPO}`. Real project profiles belong in the user's local config
+directory.
