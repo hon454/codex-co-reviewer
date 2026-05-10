@@ -8,7 +8,22 @@ line-specific PR reviews from project-specific local profiles.
 
 ## Status
 
-Design scaffold. Implementation has not started yet.
+Design and repository harness scaffold. Product implementation has not started yet.
+
+## Repository Harness
+
+This repository uses a contract-first harness for Codex-led development.
+
+- `AGENTS.md` is the Codex entrypoint.
+- `docs/architecture.md` describes module boundaries.
+- `docs/development.md` describes the Codex operating loop.
+- `docs/quality.md` defines completion and verification standards.
+- `docs/threat-model.md` tracks product-specific risks.
+- `docs/contracts/` contains safety contracts that implementation must preserve.
+- `docs/adr/` records important decisions.
+
+The previous single design scaffold has been replaced by these durable harness
+documents so future implementation work has sharper boundaries.
 
 ## Goals
 
