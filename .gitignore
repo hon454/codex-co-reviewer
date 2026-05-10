@@ -64,6 +64,10 @@ htmlcov/
 /worktrees/
 /repos/
 
+# Superpowers workflow artifacts are local planning scratch space.
+# This repository keeps its durable harness documentation under docs/.
+/docs/superpowers/
+
 # Editor and OS files
 .vscode/*
 !.vscode/settings.json
