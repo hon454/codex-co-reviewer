@@ -54,9 +54,14 @@ code must not hard-code user home paths. Relative paths in config are resolved
 relative to the local config root unless a field explicitly documents another
 base.
 
-Configured paths must not escape the allowed config, data, state, log, artifact,
-or worktree roots through symlinks or traversal. Worktrees are created under the
-tool's data directory, not inside the user's normal working directories.
+Tool-owned paths must not escape the allowed config, data, state, log,
+artifact, or worktree roots through symlinks or traversal. Project source paths,
+such as `projects[].localPath`, may live outside those roots. They must resolve
+to absolute canonical paths, must not traverse unexpectedly through relative
+segments or symlinks, and must be checked for existence and access before any
+operation that reads, copies, or runs commands from them. Worktrees are created
+under the tool's data directory, not inside the user's normal working
+directories.
 
 ## Project Profiles
 
