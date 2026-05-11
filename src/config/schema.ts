@@ -304,6 +304,13 @@ function codeForIssue(issue: z.ZodIssue): ConfigErrorCode {
     return "CONFIG_INVALID_BOUNDS";
   }
 
+  if (
+    issue.code === z.ZodIssueCode.invalid_literal &&
+    typeof issue.expected === "string"
+  ) {
+    return "CONFIG_INVALID_ENUM";
+  }
+
   if (issue.code === z.ZodIssueCode.invalid_literal) {
     return "CONFIG_POLICY_VIOLATION";
   }

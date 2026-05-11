@@ -82,4 +82,20 @@ describe("config schema and defaults", () => {
     if (result.ok) throw new Error("expected invalid config");
     expect(result.errors.map((error) => error.code)).toContain("CONFIG_INVALID_BOUNDS");
   });
+
+  it("maps invalid literal-backed config options to invalid enum", () => {
+    const result = buildEffectiveConfig({
+      reviewer: { backend: "openai_api" },
+      projects: minimalConfig.projects,
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected invalid config");
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({
+        code: "CONFIG_INVALID_ENUM",
+        path: ["reviewer", "backend"],
+      }),
+    );
+  });
 });
