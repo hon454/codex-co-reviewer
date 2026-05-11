@@ -1,12 +1,35 @@
+import { constants } from "node:fs";
 import { mkdtemp, mkdir, realpath, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createPathResolver,
   resolveProjectLocalPath,
   resolveToolOwnedPath,
 } from "../../src/config/paths.js";
+
+type Access = typeof import("node:fs/promises").access;
+
+const fsPromisesMocks = vi.hoisted(() => ({
+  access: vi.fn<Access>(),
+}));
+
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return {
+    ...actual,
+    access: fsPromisesMocks.access,
+  };
+});
+
+beforeEach(async () => {
+  const actual = await vi.importActual<typeof import("node:fs/promises")>(
+    "node:fs/promises",
+  );
+  fsPromisesMocks.access.mockReset();
+  fsPromisesMocks.access.mockImplementation(actual.access);
+});
 
 async function tempRoot(): Promise<string> {
   return mkdtemp(path.join(tmpdir(), "codex-co-reviewer-paths-"));
@@ -166,6 +189,55 @@ describe("config path resolution", () => {
     if (result.ok) throw new Error("expected project symlink path to fail");
     expect(result.errors).toContainEqual(
       expect.objectContaining({ code: "CONFIG_PATH_UNSAFE" }),
+    );
+  });
+});
+
+describe("config path access modes", () => {
+  it("checks tool-owned paths with read access only", async () => {
+    const root = await tempRoot();
+    const configRoot = path.join(root, "config");
+    const dataRoot = path.join(root, "data");
+    const stateRoot = path.join(root, "state");
+    const logRoot = path.join(root, "log");
+    await Promise.all([
+      mkdir(path.join(configRoot, "profiles", "alpha"), { recursive: true }),
+      mkdir(dataRoot, { recursive: true }),
+      mkdir(stateRoot, { recursive: true }),
+      mkdir(logRoot, { recursive: true }),
+    ]);
+    const promptPath = path.join(configRoot, "profiles", "alpha", "review.md");
+    await writeFile(promptPath, "review guidance");
+    const canonicalPromptPath = await realpath(promptPath);
+
+    const resolver = createPathResolver({ configRoot, dataRoot, stateRoot, logRoot });
+    const result = await resolveToolOwnedPath(
+      resolver,
+      "config",
+      "profiles/alpha/review.md",
+    );
+
+    expect(result.ok).toBe(true);
+    expect(fsPromisesMocks.access).toHaveBeenCalledTimes(1);
+    expect(fsPromisesMocks.access).toHaveBeenCalledWith(
+      canonicalPromptPath,
+      constants.R_OK,
+    );
+  });
+
+  it("checks project roots with read and execute access", async () => {
+    const root = await tempRoot();
+    const projectRoot = path.join(root, "project");
+    await mkdir(projectRoot, { recursive: true });
+    const canonicalProjectRoot = await realpath(projectRoot);
+
+    const result = await resolveProjectLocalPath(canonicalProjectRoot);
+
+    expect(result.ok).toBe(true);
+    expect(fsPromisesMocks.access).toHaveBeenCalledTimes(1);
+    expect(fsPromisesMocks.access).toHaveBeenCalledWith(
+      canonicalProjectRoot,
+      constants.R_OK | constants.X_OK,
     );
   });
 });
