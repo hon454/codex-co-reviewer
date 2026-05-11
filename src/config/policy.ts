@@ -1,7 +1,7 @@
-import type { EffectiveConfig } from "./schema.js";
+import type { ParsedConfig } from "./schema.js";
 import { type ConfigError, makeConfigError } from "./errors.js";
 
-export function enforcePolicyInvariants(config: EffectiveConfig): ConfigError[] {
+export function enforcePolicyInvariants(config: ParsedConfig): ConfigError[] {
   const errors: ConfigError[] = [];
 
   if (config.daemon.noGithubWriteAfterStopRequested !== true) {

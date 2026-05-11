@@ -273,7 +273,36 @@ export const rawConfigSchema = z
 
 export type RawProjectConfig = z.input<typeof rawProjectSchema>;
 export type RawConfig = z.input<typeof rawConfigSchema>;
-export type EffectiveConfig = z.output<typeof rawConfigSchema>;
+export type ParsedConfig = z.output<typeof rawConfigSchema>;
+export type ParsedProjectConfig = ParsedConfig["projects"][number];
+export type EffectiveProjectConfig = Omit<
+  ParsedProjectConfig,
+  "policy" | "setup" | "confidence" | "rereview"
+> & {
+  policy: Omit<ParsedProjectConfig["policy"], "autoApprove"> & {
+    autoApprove: false;
+  };
+  setup: Omit<ParsedProjectConfig["setup"], "onFailure"> & {
+    onFailure: "log_only_skip_review";
+  };
+  confidence: Omit<ParsedProjectConfig["confidence"], "low"> & {
+    low: Omit<ParsedProjectConfig["confidence"]["low"], "contributesToDecision"> & {
+      contributesToDecision: false;
+    };
+  };
+  rereview: Omit<ParsedProjectConfig["rereview"], "sameHeadShaBehavior"> & {
+    sameHeadShaBehavior: "skip_and_log";
+  };
+};
+export type EffectiveConfig = Omit<ParsedConfig, "daemon" | "artifacts" | "projects"> & {
+  daemon: Omit<ParsedConfig["daemon"], "noGithubWriteAfterStopRequested"> & {
+    noGithubWriteAfterStopRequested: true;
+  };
+  artifacts: Omit<ParsedConfig["artifacts"], "redaction"> & {
+    redaction: true;
+  };
+  projects: EffectiveProjectConfig[];
+};
 
 function normalizePath(path: (string | number)[]): ConfigErrorPathSegment[] {
   return path;
@@ -335,7 +364,7 @@ function errorsFromIssues(issues: z.ZodIssue[]): ConfigError[] {
   );
 }
 
-function duplicateProjectIdErrors(config: EffectiveConfig): ConfigError[] {
+function duplicateProjectIdErrors(config: ParsedConfig): ConfigError[] {
   const seen = new Map<string, number>();
   const errors: ConfigError[] = [];
 
@@ -359,6 +388,12 @@ function duplicateProjectIdErrors(config: EffectiveConfig): ConfigError[] {
   return errors;
 }
 
+function toEffectiveConfig(config: ParsedConfig): EffectiveConfig {
+  // Policy checks immediately before this boundary prove the relaxed v1 fields
+  // have their safe literal values, so callers can rely on the narrowed type.
+  return config as EffectiveConfig;
+}
+
 export function buildEffectiveConfig(input: unknown): ConfigResult<EffectiveConfig> {
   const parsed = rawConfigSchema.safeParse(input);
 
@@ -373,5 +408,5 @@ export function buildEffectiveConfig(input: unknown): ConfigResult<EffectiveConf
     return { ok: false, errors };
   }
 
-  return { ok: true, value: parsed.data };
+  return { ok: true, value: toEffectiveConfig(parsed.data) };
 }
