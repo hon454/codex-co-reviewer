@@ -2,8 +2,9 @@
 
 ## Status
 
-This spec defines the next implementation slice after the completed config-core
-slice. It is not implemented yet. The implementation plan is
+This spec defines the first read-only CLI implementation slice after the
+completed config-core slice. The slice is implemented and covered by the
+repository verification command. The implementation plan is
 `docs/plans/2026-05-11-cli-config-validation.md`.
 
 ## Purpose
