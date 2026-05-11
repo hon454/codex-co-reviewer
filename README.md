@@ -8,7 +8,9 @@ line-specific PR reviews from project-specific local profiles.
 
 ## Status
 
-Design and repository harness scaffold. Product implementation has not started yet.
+Design and repository harness scaffold with the first executable config-core
+slice in place. Daemon, GitHub review orchestration, and review runtime
+implementation have not started yet.
 
 ## Repository Harness
 

@@ -29,14 +29,15 @@ Merge decisions are user-owned.
 
 ## Required Verification
 
-Run the single local verification command before reporting product code changes
-complete:
+Run the single local verification command before reporting product or
+documentation changes complete:
 
 ```sh
 npm run verify
 ```
 
-Documentation-only harness changes may also run:
+For documentation-only harness work, also scan durable docs for unfinished
+placeholders:
 
 ```sh
 rg --no-ignore -n "T[B]D|T[O]DO|fill[[:space:]]+in|implement[[:space:]]+later" AGENTS.md README.md docs .github || true
