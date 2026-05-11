@@ -194,6 +194,35 @@ describe("YAML config loader", () => {
     expect(result.errors[0]?.redactedMessage).not.toContain(configPath);
   });
 
+  it("fully redacts config paths with delimiters in loader errors", async () => {
+    const root = await tempRoot();
+    const configRoot = path.join(root, "My Project (Final)", "config");
+    const dataRoot = path.join(root, "data");
+    const stateRoot = path.join(root, "state");
+    const logRoot = path.join(root, "log");
+    await Promise.all([
+      mkdir(configRoot, { recursive: true }),
+      mkdir(dataRoot, { recursive: true }),
+      mkdir(stateRoot, { recursive: true }),
+      mkdir(logRoot, { recursive: true }),
+    ]);
+    const configPath = path.join(configRoot, "config.yaml");
+    await writeFile(configPath, "github:\n  username: [\n");
+
+    const result = await loadConfigFromFile(configPath, {
+      configRoot,
+      dataRoot,
+      stateRoot,
+      logRoot,
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected parse failure");
+    expect(result.errors[0]?.redactedMessage).toContain("[REDACTED_PATH]");
+    expect(result.errors[0]?.redactedMessage).not.toContain("My Project (Final)");
+    expect(result.errors[0]?.redactedMessage).not.toContain(")/config.yaml");
+  });
+
   it("does not perform runtime environment validation", async () => {
     const contents = [
       "github:",

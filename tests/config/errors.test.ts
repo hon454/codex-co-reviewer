@@ -87,6 +87,10 @@ describe("config errors", () => {
         "Config path /Users/van/My Project/config.yaml is not readable.",
         "Path: /Users/van/Project to Review/config.yaml",
         "Path: /Users/van/R and D",
+        "Failed to parse YAML config at /Users/van/My Project (Final)/config.yaml: bad",
+        "Config path /Users/van/My Project [Final]/config.yaml is not readable.",
+        "See /tmp/My Project (Final)/config.yaml now",
+        String.raw`Config path C:\Users\alice\My Project (Final)\config.yaml is not readable.`,
         "See https://example.com/My Project/config.yaml",
       ].join("\n"),
     );
@@ -98,6 +102,12 @@ describe("config errors", () => {
     expect(redacted).not.toContain("/Users/van/My Project/config.yaml");
     expect(redacted).not.toContain("/Users/van/Project to Review");
     expect(redacted).not.toContain("/Users/van/R and D");
+    expect(redacted).not.toContain("/Users/van/My Project (Final)");
+    expect(redacted).not.toContain(")/config.yaml");
+    expect(redacted).not.toContain("]/config.yaml");
+    expect(redacted).not.toContain("/tmp/My Project (Final)");
+    expect(redacted).not.toContain(String.raw`C:\Users\alice\My Project (Final)`);
+    expect(redacted).not.toContain(String.raw`)\config.yaml`);
     expect(localClauses.join("\n")).not.toContain("Project/config.yaml");
     expect(localClauses.join("\n")).not.toContain("to Review/config.yaml");
     expect(localClauses.join("\n")).not.toContain("R and D");

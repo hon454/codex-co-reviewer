@@ -36,9 +36,11 @@ const SECRET_PATTERN =
 const PATH_FIELD_PATTERN =
   /(\bPath:\s*)(?:(?:\/(?:Users|home|Volumes|private|tmp|var\/folders)\/)|(?:[A-Za-z]:[\\/]|\\\\))[^\n]+/gi;
 const LOCAL_FILE_PATH_WITH_SPACES_PATTERN =
-  /(^|[\s"'`([{=,:;])\/(?:Users|home|Volumes|private|tmp|var\/folders)\/[^\n"'`)\]}<>]+?\.[A-Za-z0-9]{1,12}\b/g;
+  /(^|[\s"'`([{=,:;])\/(?:Users|home|Volumes|private|tmp|var\/folders)\/[^\n"'`<>]+?\.[A-Za-z0-9]{1,12}\b/g;
 const LOCAL_PATH_PATTERN =
   /(^|[\s"'`([{=,:;])\/(?:Users|home|Volumes|private|tmp|var\/folders)\/(?:(?!\s(?:is|are|was|were|does|do|did|and|or|but|with|without|from|to|for|in|on|at|by)\b)[^\n"'`)\]}<>])+/g;
+const WINDOWS_FILE_PATH_WITH_SPACES_PATTERN =
+  /(^|[\s"'`([{=,:;])(?:[A-Za-z]:[\\/]|\\\\)[^\n"'`<>]+?\.[A-Za-z0-9]{1,12}\b/g;
 const WINDOWS_PATH_PATTERN =
   /(^|[\s"'`([{=,:;])(?:[A-Za-z]:[\\/]|\\\\)[^\s"'`)\]}<>]+/g;
 
@@ -50,6 +52,7 @@ export function redactForDisplay(value: string): string {
     .replace(PATH_FIELD_PATTERN, "$1[REDACTED_PATH]")
     .replace(LOCAL_FILE_PATH_WITH_SPACES_PATTERN, "$1[REDACTED_PATH]")
     .replace(LOCAL_PATH_PATTERN, "$1[REDACTED_PATH]")
+    .replace(WINDOWS_FILE_PATH_WITH_SPACES_PATTERN, "$1[REDACTED_PATH]")
     .replace(WINDOWS_PATH_PATTERN, "$1[REDACTED_PATH]");
 }
 
