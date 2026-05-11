@@ -122,11 +122,12 @@ describe("config path resolution", () => {
     const root = await tempRoot();
     const projectRoot = path.join(root, "project");
     await mkdir(projectRoot, { recursive: true });
+    const canonicalProjectRoot = await realpath(projectRoot);
 
-    const resolved = await resolveProjectLocalPath(projectRoot);
+    const resolved = await resolveProjectLocalPath(canonicalProjectRoot);
     expect(resolved.ok).toBe(true);
     if (!resolved.ok) throw new Error("expected project path to resolve");
-    expect(resolved.value).toBe(await realpath(projectRoot));
+    expect(resolved.value).toBe(canonicalProjectRoot);
 
     const relative = await resolveProjectLocalPath("project");
     expect(relative.ok).toBe(false);
@@ -135,7 +136,9 @@ describe("config path resolution", () => {
       expect.objectContaining({ code: "CONFIG_PATH_NOT_ABSOLUTE" }),
     );
 
-    const traversing = await resolveProjectLocalPath(`${projectRoot}${path.sep}..`);
+    const traversing = await resolveProjectLocalPath(
+      `${canonicalProjectRoot}${path.sep}..`,
+    );
     expect(traversing.ok).toBe(false);
     if (traversing.ok) throw new Error("expected traversing project path to fail");
     expect(traversing.errors).toContainEqual(
@@ -147,6 +150,22 @@ describe("config path resolution", () => {
     if (missing.ok) throw new Error("expected missing project path to fail");
     expect(missing.errors).toContainEqual(
       expect.objectContaining({ code: "CONFIG_PATH_NOT_FOUND" }),
+    );
+  });
+
+  it("rejects configured project source paths that resolve through symlinks", async () => {
+    const root = await tempRoot();
+    const projectRoot = path.join(root, "project");
+    const linkedProjectRoot = path.join(root, "project-link");
+    await mkdir(projectRoot, { recursive: true });
+    await symlink(projectRoot, linkedProjectRoot);
+
+    const result = await resolveProjectLocalPath(linkedProjectRoot);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected project symlink path to fail");
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: "CONFIG_PATH_UNSAFE" }),
     );
   });
 });

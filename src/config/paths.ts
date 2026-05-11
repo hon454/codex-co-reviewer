@@ -96,8 +96,18 @@ export async function resolveProjectLocalPath(
   }
 
   try {
+    const normalizedConfiguredPath = stripTrailingSeparators(
+      path.normalize(configuredPath),
+    );
     const canonicalPath = await realpath(configuredPath);
     await access(canonicalPath);
+    if (normalizedConfiguredPath !== stripTrailingSeparators(canonicalPath)) {
+      return pathError(
+        "CONFIG_PATH_UNSAFE",
+        configuredPath,
+        "Project local path must be configured as its canonical path and must not resolve through symlinks.",
+      );
+    }
     return { ok: true, value: canonicalPath };
   } catch {
     return pathError(

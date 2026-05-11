@@ -59,4 +59,19 @@ describe("config errors", () => {
 
     expect(redactForDisplay(text)).toBe(text);
   });
+
+  it("redacts common absolute local paths from path error display messages", () => {
+    const error = makeConfigError({
+      code: "CONFIG_PATH_NOT_FOUND",
+      path: ["projects", 0, "localPath"],
+      message: [
+        "Project local path does not exist or is not accessible. Path: /home/alice/private/repo",
+        "Project local path does not exist or is not accessible. Path: /Volumes/private/repo",
+      ].join("\n"),
+    });
+
+    expect(error.redactedMessage).toContain("[REDACTED_PATH]");
+    expect(error.redactedMessage).not.toContain("/home/alice/private");
+    expect(error.redactedMessage).not.toContain("/Volumes/private");
+  });
 });

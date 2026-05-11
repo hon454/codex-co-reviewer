@@ -33,14 +33,15 @@ const AUTHORIZATION_PATTERN =
 const PROMPT_PATTERN = /^\s*prompt\s*:\s*.*$/gim;
 const SECRET_PATTERN =
   /\b(?:github_pat_[A-Za-z0-9_]{16,}|gh[pousr]_[A-Za-z0-9_]{16,}|sk-[A-Za-z0-9_-]{16,}|[A-Z][A-Z0-9_]*(?:TOKEN|KEY|SECRET)=[^\s"'`]+)\b/g;
-const USER_PATH_PATTERN = /\/Users\/[^\s"'`]+/g;
+const LOCAL_PATH_PATTERN =
+  /(^|[\s"'`([{=,:;])\/(?:Users|home|Volumes|private|tmp|var\/folders)\/[^\s"'`)\]}<>]+/g;
 
 export function redactForDisplay(value: string): string {
   return value
     .replace(AUTHORIZATION_PATTERN, "[REDACTED_AUTHORIZATION]")
     .replace(PROMPT_PATTERN, "[REDACTED_PROMPT]")
     .replace(SECRET_PATTERN, "[REDACTED_SECRET]")
-    .replace(USER_PATH_PATTERN, "[REDACTED_PATH]");
+    .replace(LOCAL_PATH_PATTERN, "$1[REDACTED_PATH]");
 }
 
 export function makeConfigError(input: ConfigErrorInput): ConfigError {
