@@ -28,10 +28,11 @@ export interface ConfigError {
   metadata: Record<string, string | number | boolean>;
 }
 
-const AUTHORIZATION_PATTERN = /Authorization:\s*(?:Bearer|token)\s+[^\s]+/gi;
+const AUTHORIZATION_PATTERN =
+  /^[ \t]*Authorization\s*:\s*[A-Za-z][A-Za-z0-9+.-]*\s+\S+[ \t]*$/gim;
 const PROMPT_PATTERN = /^\s*prompt\s*:\s*.*$/gim;
 const SECRET_PATTERN =
-  /\b(?:gh[pousr]_[A-Za-z0-9_]{16,}|sk-[A-Za-z0-9_-]{16,}|[A-Z][A-Z0-9_]*(?:TOKEN|KEY|SECRET)=[^\s"'`]+)\b/g;
+  /\b(?:github_pat_[A-Za-z0-9_]{16,}|gh[pousr]_[A-Za-z0-9_]{16,}|sk-[A-Za-z0-9_-]{16,}|[A-Z][A-Z0-9_]*(?:TOKEN|KEY|SECRET)=[^\s"'`]+)\b/g;
 const USER_PATH_PATTERN = /\/Users\/[^\s"'`]+/g;
 
 export function redactForDisplay(value: string): string {

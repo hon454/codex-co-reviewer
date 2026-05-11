@@ -33,6 +33,8 @@ describe("config errors", () => {
   it("redacts sensitive values from user-facing messages", () => {
     const text = [
       "Authorization: Bearer ghp_abcdefghijklmnopqrstuvwxyz123456",
+      "Authorization: Basic dXNlcjpwYXNz",
+      "Fine-grained token github_pat_11ABCDEFGabcdefghiJKLM_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456",
       "OPENAI_API_KEY=sk-test_abcdefghijklmnopqrstuvwxyz",
       "/Users/van/private/repo/config.yaml",
       "prompt: use token ghp_secretsecretsecretsecretsecret",
@@ -41,6 +43,8 @@ describe("config errors", () => {
     const redacted = redactForDisplay(text);
 
     expect(redacted).not.toContain("ghp_abcdefghijklmnopqrstuvwxyz123456");
+    expect(redacted).not.toContain("dXNlcjpwYXNz");
+    expect(redacted).not.toContain("github_pat_11ABCDEFGabcdefghiJKLM_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456");
     expect(redacted).not.toContain("sk-test_abcdefghijklmnopqrstuvwxyz");
     expect(redacted).not.toContain("/Users/van/private");
     expect(redacted).not.toContain("use token");
@@ -48,5 +52,11 @@ describe("config errors", () => {
     expect(redacted).toContain("[REDACTED_SECRET]");
     expect(redacted).toContain("[REDACTED_PATH]");
     expect(redacted).toContain("[REDACTED_PROMPT]");
+  });
+
+  it("does not redact ordinary prose without a secret-like authorization value", () => {
+    const text = "Authorization: required before using this command";
+
+    expect(redactForDisplay(text)).toBe(text);
   });
 });
