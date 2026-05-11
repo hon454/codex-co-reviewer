@@ -98,4 +98,20 @@ describe("config schema and defaults", () => {
       }),
     );
   });
+
+  it("maps wrong-type literal-backed config options to schema invalid", () => {
+    const result = buildEffectiveConfig({
+      reviewer: { backend: 123 },
+      projects: minimalConfig.projects,
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected invalid config");
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({
+        code: "CONFIG_SCHEMA_INVALID",
+        path: ["reviewer", "backend"],
+      }),
+    );
+  });
 });

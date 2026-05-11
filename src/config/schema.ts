@@ -306,9 +306,17 @@ function codeForIssue(issue: z.ZodIssue): ConfigErrorCode {
 
   if (
     issue.code === z.ZodIssueCode.invalid_literal &&
-    typeof issue.expected === "string"
+    typeof issue.expected === "string" &&
+    typeof issue.received === "string"
   ) {
     return "CONFIG_INVALID_ENUM";
+  }
+
+  if (
+    issue.code === z.ZodIssueCode.invalid_literal &&
+    typeof issue.expected === "string"
+  ) {
+    return "CONFIG_SCHEMA_INVALID";
   }
 
   if (issue.code === z.ZodIssueCode.invalid_literal) {
