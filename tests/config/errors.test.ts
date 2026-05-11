@@ -3,17 +3,31 @@ import { makeConfigError, redactForDisplay } from "../../src/config/errors.js";
 
 describe("config errors", () => {
   it("keeps stable codes and structured metadata separate from display text", () => {
+    const sensitiveMessage = [
+      "Authorization: Bearer ghp_abcdefghijklmnopqrstuvwxyz123456",
+      "Config path /Users/van/private/repo/config.yaml is not readable",
+    ].join("\n");
+
     const error = makeConfigError({
-      code: "CONFIG_INVALID_REPO",
-      path: ["projects", 0, "repo"],
-      message: "Invalid repository identifier",
-      metadata: { repo: "not-a-repo" },
+      code: "CONFIG_PATH_NOT_FOUND",
+      path: ["projects", 0, "promptFile"],
+      message: sensitiveMessage,
+      metadata: { projectId: "alpha", index: 0 },
     });
 
-    expect(error.code).toBe("CONFIG_INVALID_REPO");
-    expect(error.path).toEqual(["projects", 0, "repo"]);
-    expect(error.metadata).toEqual({ repo: "not-a-repo" });
-    expect(error.redactedMessage).toBe("Invalid repository identifier");
+    expect(error.code).toBe("CONFIG_PATH_NOT_FOUND");
+    expect(error.path).toEqual(["projects", 0, "promptFile"]);
+    expect(error.message).toBe(sensitiveMessage);
+    expect(error.message).toContain("ghp_abcdefghijklmnopqrstuvwxyz123456");
+    expect(error.message).toContain("/Users/van/private/repo/config.yaml");
+    expect(error.metadata).toEqual({ projectId: "alpha", index: 0 });
+    expect(error.redactedMessage).not.toBe(error.message);
+    expect(error.redactedMessage).toContain("[REDACTED_AUTHORIZATION]");
+    expect(error.redactedMessage).toContain("[REDACTED_PATH]");
+    expect(error.redactedMessage).not.toContain("ghp_abcdefghijklmnopqrstuvwxyz123456");
+    expect(error.redactedMessage).not.toContain("/Users/van/private/repo/config.yaml");
+    expect(error.redactedMessage).not.toContain("projectId");
+    expect(error.redactedMessage).not.toContain("alpha");
   });
 
   it("redacts sensitive values from user-facing messages", () => {
