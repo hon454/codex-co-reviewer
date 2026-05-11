@@ -36,7 +36,7 @@ const SECRET_PATTERN =
 const LOCAL_PATH_PATTERN =
   /(^|[\s"'`([{=,:;])\/(?:Users|home|Volumes|private|tmp|var\/folders)\/[^\s"'`)\]}<>]+/g;
 const WINDOWS_PATH_PATTERN =
-  /(^|[\s"'`([{=,:;])(?:[A-Za-z]:\\|\\\\)[^\s"'`)\]}<>]+/g;
+  /(^|[\s"'`([{=,:;])(?:[A-Za-z]:[\\/]|\\\\)[^\s"'`)\]}<>]+/g;
 
 export function redactForDisplay(value: string): string {
   return value
