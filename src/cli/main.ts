@@ -1,5 +1,7 @@
 #!/usr/bin/env node
+import { realpathSync } from "node:fs";
 import { homedir } from "node:os";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { resolveLocalPaths } from "../platform/roots.js";
 import { parseCliArgs } from "./args.js";
 import {
@@ -51,7 +53,23 @@ const HELP_TEXT = [
   "  --log-root <path>",
 ].join("\n");
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+export function isMainModule(
+  moduleUrl: string,
+  argvPath: string | undefined,
+  resolveRealPath: (path: string) => string = realpathSync,
+): boolean {
+  if (argvPath === undefined) {
+    return false;
+  }
+
+  try {
+    return fileURLToPath(moduleUrl) === resolveRealPath(argvPath);
+  } catch {
+    return moduleUrl === pathToFileURL(argvPath).href;
+  }
+}
+
+if (isMainModule(import.meta.url, process.argv[1])) {
   const result = await runCli({
     argv: process.argv.slice(2),
     env: process.env,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { runCli } from "../../src/cli/main.js";
+import { pathToFileURL } from "node:url";
+import { isMainModule, runCli } from "../../src/cli/main.js";
 
 describe("CLI entrypoint", () => {
   it("prints help", async () => {
@@ -26,5 +27,24 @@ describe("CLI entrypoint", () => {
       stdout: "",
       stderr: "Unsupported command: start\n",
     });
+  });
+
+  it("detects the executable entrypoint when the path contains spaces", () => {
+    const entrypointPath = "/tmp/codex co reviewer/dist/cli/main.js";
+
+    expect(isMainModule(pathToFileURL(entrypointPath).href, entrypointPath)).toBe(
+      true,
+    );
+  });
+
+  it("detects the executable entrypoint through symlinked path aliases", () => {
+    const realEntrypointPath = "/private/tmp/codex co reviewer/dist/cli/main.js";
+    const argvPath = "/tmp/codex co reviewer/dist/cli/main.js";
+
+    expect(
+      isMainModule(pathToFileURL(realEntrypointPath).href, argvPath, () => {
+        return realEntrypointPath;
+      }),
+    ).toBe(true);
   });
 });
