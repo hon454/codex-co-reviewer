@@ -33,6 +33,10 @@ const AUTHORIZATION_PATTERN =
 const PROMPT_PATTERN = /^\s*prompt\s*:\s*.*$/gim;
 const SECRET_PATTERN =
   /\b(?:github_pat_[A-Za-z0-9_]{16,}|gh[pousr]_[A-Za-z0-9_]{16,}|sk-[A-Za-z0-9_-]{16,}|[A-Z][A-Z0-9_]*(?:TOKEN|KEY|SECRET|PASSWORD)=[^\s"'`]+)\b/g;
+const PATH_FIELD_PATTERN =
+  /(\bPath:\s*)(?:(?:\/(?:Users|home|Volumes|private|tmp|var\/folders)\/)|(?:[A-Za-z]:[\\/]|\\\\))[^\n]+/gi;
+const LOCAL_FILE_PATH_WITH_SPACES_PATTERN =
+  /(^|[\s"'`([{=,:;])\/(?:Users|home|Volumes|private|tmp|var\/folders)\/[^\n"'`)\]}<>]+?\.[A-Za-z0-9]{1,12}\b/g;
 const LOCAL_PATH_PATTERN =
   /(^|[\s"'`([{=,:;])\/(?:Users|home|Volumes|private|tmp|var\/folders)\/(?:(?!\s(?:is|are|was|were|does|do|did|and|or|but|with|without|from|to|for|in|on|at|by)\b)[^\n"'`)\]}<>])+/g;
 const WINDOWS_PATH_PATTERN =
@@ -43,6 +47,8 @@ export function redactForDisplay(value: string): string {
     .replace(AUTHORIZATION_PATTERN, "[REDACTED_AUTHORIZATION]")
     .replace(PROMPT_PATTERN, "[REDACTED_PROMPT]")
     .replace(SECRET_PATTERN, "[REDACTED_SECRET]")
+    .replace(PATH_FIELD_PATTERN, "$1[REDACTED_PATH]")
+    .replace(LOCAL_FILE_PATH_WITH_SPACES_PATTERN, "$1[REDACTED_PATH]")
     .replace(LOCAL_PATH_PATTERN, "$1[REDACTED_PATH]")
     .replace(WINDOWS_PATH_PATTERN, "$1[REDACTED_PATH]");
 }

@@ -83,13 +83,24 @@ describe("config errors", () => {
 
   it("redacts local paths containing spaces without leaking suffixes", () => {
     const redacted = redactForDisplay(
-      "Config path /Users/van/My Project/config.yaml is not readable. See https://example.com/My Project/config.yaml",
+      [
+        "Config path /Users/van/My Project/config.yaml is not readable.",
+        "Path: /Users/van/Project to Review/config.yaml",
+        "Path: /Users/van/R and D",
+        "See https://example.com/My Project/config.yaml",
+      ].join("\n"),
     );
-    const localPathClause = redacted.slice(0, redacted.indexOf(" See "));
+    const localClauses = redacted
+      .split("\n")
+      .filter((line) => !line.startsWith("See "));
 
     expect(redacted).toContain("[REDACTED_PATH]");
-    expect(localPathClause).not.toContain("/Users/van/My Project/config.yaml");
-    expect(localPathClause).not.toContain("Project/config.yaml");
+    expect(redacted).not.toContain("/Users/van/My Project/config.yaml");
+    expect(redacted).not.toContain("/Users/van/Project to Review");
+    expect(redacted).not.toContain("/Users/van/R and D");
+    expect(localClauses.join("\n")).not.toContain("Project/config.yaml");
+    expect(localClauses.join("\n")).not.toContain("to Review/config.yaml");
+    expect(localClauses.join("\n")).not.toContain("R and D");
     expect(redacted).toContain("https://example.com/My Project/config.yaml");
   });
 });
