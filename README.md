@@ -8,8 +8,8 @@ line-specific PR reviews from project-specific local profiles.
 
 ## Status
 
-Design and repository harness scaffold with the first executable config-core
-slice in place. Daemon, GitHub review orchestration, and review runtime
+Design and repository harness scaffold with config-core and read-only config
+CLI commands in place. Daemon, GitHub review orchestration, and review runtime
 implementation have not started yet.
 
 ## Repository Harness
@@ -43,6 +43,17 @@ documents so future implementation work has sharper boundaries.
 - Support Codex CLI with OAuth in v1, while leaving room for an OpenAI API
   backend later.
 
+## Implemented Commands
+
+```sh
+codex-co-reviewer project validate
+codex-co-reviewer project list
+```
+
+These commands validate and display local project configuration only. They do
+not contact GitHub, invoke Codex, start the daemon, create worktrees, persist
+artifacts, or submit reviews.
+
 ## Planned Commands
 
 ```sh
@@ -56,8 +67,6 @@ codex-co-reviewer doctor
 codex-co-reviewer scan [--project id]
 codex-co-reviewer why owner/repo#123
 codex-co-reviewer project add
-codex-co-reviewer project list
-codex-co-reviewer project validate
 ```
 
 ## Local Files

@@ -88,6 +88,19 @@ It returns redacted parse and path errors without throwing for ordinary config
 validation failures. Runtime environment checks, such as whether the configured
 Codex command exists, are outside this slice.
 
+## Read-Only CLI Consumers
+
+The config core is now consumed by the read-only config CLI slice:
+
+- `codex-co-reviewer project validate`
+- `codex-co-reviewer project validate --json`
+- `codex-co-reviewer project list`
+- `codex-co-reviewer project list --json`
+
+These commands validate and display local project configuration only. They do
+not contact GitHub, invoke Codex, start a daemon, create worktrees, persist
+artifacts, or submit reviews.
+
 ## Path Safety Rules
 
 Tool-owned config paths:
@@ -134,7 +147,6 @@ invariants, and redacted diagnostics-ready errors.
 
 It intentionally leaves these architecture modules out of scope:
 
-- CLI commands.
 - Daemon lifecycle.
 - Scheduler.
 - GitHub gateway.
@@ -157,8 +169,10 @@ npm run verify
 Expected current result:
 
 ```text
-6 test files passed
-43 tests passed
+typecheck passed
+11 test files passed
+63 tests passed
+build passed
 ```
 
 ## Implementation Plans

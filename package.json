@@ -3,13 +3,17 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "codex-co-reviewer": "./dist/cli/main.js"
+  },
   "engines": {
     "node": ">=20"
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "verify": "npm run typecheck && npm test"
+    "verify": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "yaml": "^2.7.0",
