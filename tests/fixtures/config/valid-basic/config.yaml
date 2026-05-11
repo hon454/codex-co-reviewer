@@ -1,0 +1,8 @@
+github:
+  username: fixture-user
+
+projects:
+  - id: alpha
+    repo: owner/repo
+    localPath: __FIXTURE_SOURCE_REPO__
+    promptFile: profiles/alpha/review.md
