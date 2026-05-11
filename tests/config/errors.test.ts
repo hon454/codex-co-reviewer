@@ -67,11 +67,13 @@ describe("config errors", () => {
       message: [
         "Project local path does not exist or is not accessible. Path: /home/alice/private/repo",
         "Project local path does not exist or is not accessible. Path: /Volumes/private/repo",
+        String.raw`Project local path does not exist or is not accessible. Path: C:\Users\alice\private\repo`,
       ].join("\n"),
     });
 
     expect(error.redactedMessage).toContain("[REDACTED_PATH]");
     expect(error.redactedMessage).not.toContain("/home/alice/private");
     expect(error.redactedMessage).not.toContain("/Volumes/private");
+    expect(error.redactedMessage).not.toContain(String.raw`C:\Users\alice\private`);
   });
 });
