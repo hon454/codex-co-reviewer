@@ -1,41 +1,42 @@
-# {PROJECT_NAME} Review Process
+# {PROJECT_ID} Review Profile
 
-Use this file as a fictional example of a project-specific review profile.
-Real profiles should live in your local config directory, not in this
-repository.
+Use this profile to describe project-specific review priorities for
+`{OWNER}/{REPO}`. Copy it to your local config directory as:
+
+```text
+~/.config/codex-co-reviewer/profiles/{PROJECT_ID}/review.md
+```
+
+Do not commit real project profiles to managed repositories. Real profiles may
+contain private architecture notes, review preferences, or repository context.
 
 ## Review Priorities
 
-Review in this order:
+- Focus first on correctness, regressions, data loss, security, privacy, and
+  externally visible behavior changes.
+- Prefer line-specific findings that point to changed PR lines.
+- Include unanchored findings in the summary only when they are important for
+  the reviewer to consider.
+- Treat low-confidence concerns as optional questions unless the structured
+  policy allows otherwise.
+- Avoid style-only comments unless the style issue creates maintenance risk or
+  violates an explicit project rule.
 
-1. Correctness and user-visible regressions.
-2. Security, authentication, authorization, and data handling.
-3. API compatibility and migration safety.
-4. Test coverage for changed behavior.
-5. Maintainability and clarity.
+## Project Context
 
-Do not block on formatting or style-only issues that automated tooling already
-handles.
+- Runtime: describe the primary runtime or framework here.
+- Persistence: describe database, storage, or migration expectations here.
+- External services: describe important API, queue, or webhook constraints here.
+- Testing: describe the expected local verification command here.
 
-## Blocking Findings
+## Local Rules
 
-Request changes for:
+- Do not suggest GitHub review decisions directly.
+- Do not request `APPROVE`.
+- Do not bypass dedupe, changed-line anchoring, redaction, stop-state checks, or
+  any GitHub write policy.
+- Do not include secrets, tokens, private paths, or unredacted command output in
+  review text.
 
-- logic bugs that can produce incorrect orders, payments, inventory, or account
-  state
-- authorization bypasses or missing server-side validation
-- broken backwards compatibility in public APIs
-- missing tests for new or changed business behavior
-- unsafe error handling that hides failed writes or external service failures
-
-## Optional Questions
-
-Use optional questions for low-confidence concerns. Phrase them as checks for
-intent rather than instructions. Do not let optional questions affect the final
-review decision.
-
-## Output Expectations
-
-Prefer line-specific comments for actionable findings. Keep each comment short,
-specific, and tied to the changed code. The summary review should include the
-overall decision, verification evidence, and any optional questions.
+Structured policy in `config.yaml` is authoritative for safety behavior. This
+profile only guides review focus, project context, and wording.
