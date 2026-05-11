@@ -32,9 +32,9 @@ const AUTHORIZATION_PATTERN =
   /^[ \t]*Authorization\s*:\s*[A-Za-z][A-Za-z0-9+.-]*\s+\S+[ \t]*$/gim;
 const PROMPT_PATTERN = /^\s*prompt\s*:\s*.*$/gim;
 const SECRET_PATTERN =
-  /\b(?:github_pat_[A-Za-z0-9_]{16,}|gh[pousr]_[A-Za-z0-9_]{16,}|sk-[A-Za-z0-9_-]{16,}|[A-Z][A-Z0-9_]*(?:TOKEN|KEY|SECRET)=[^\s"'`]+)\b/g;
+  /\b(?:github_pat_[A-Za-z0-9_]{16,}|gh[pousr]_[A-Za-z0-9_]{16,}|sk-[A-Za-z0-9_-]{16,}|[A-Z][A-Z0-9_]*(?:TOKEN|KEY|SECRET|PASSWORD)=[^\s"'`]+)\b/g;
 const LOCAL_PATH_PATTERN =
-  /(^|[\s"'`([{=,:;])\/(?:Users|home|Volumes|private|tmp|var\/folders)\/[^\s"'`)\]}<>]+/g;
+  /(^|[\s"'`([{=,:;])\/(?:Users|home|Volumes|private|tmp|var\/folders)\/(?:(?!\s(?:is|are|was|were|does|do|did|and|or|but|with|without|from|to|for|in|on|at|by)\b)[^\n"'`)\]}<>])+/g;
 const WINDOWS_PATH_PATTERN =
   /(^|[\s"'`([{=,:;])(?:[A-Za-z]:[\\/]|\\\\)[^\s"'`)\]}<>]+/g;
 

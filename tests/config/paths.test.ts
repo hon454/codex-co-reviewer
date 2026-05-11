@@ -5,6 +5,7 @@ import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createPathResolver,
+  resolveProjectContextFilePath,
   resolveProjectLocalPath,
   resolveToolOwnedPath,
 } from "../../src/config/paths.js";
@@ -222,6 +223,70 @@ describe("config path resolution", () => {
       expect.objectContaining({ code: "CONFIG_PATH_UNSAFE" }),
     );
   });
+
+  it("resolves project context files relative to the canonical project root", async () => {
+    const root = await tempRoot();
+    const projectRoot = path.join(root, "project");
+    await mkdir(path.join(projectRoot, "docs"), { recursive: true });
+    const contextPath = path.join(projectRoot, "docs", "review-guidelines.md");
+    await writeFile(contextPath, "review guidance");
+    const canonicalProjectRoot = await realpath(projectRoot);
+    const canonicalContextPath = await realpath(contextPath);
+
+    const result = await resolveProjectContextFilePath(
+      canonicalProjectRoot,
+      "docs/review-guidelines.md",
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected context file path to resolve");
+    expect(result.value).toBe(canonicalContextPath);
+  });
+
+  it("rejects unsafe project context file paths", async () => {
+    const root = await tempRoot();
+    const projectRoot = path.join(root, "project");
+    const outsideRoot = path.join(root, "outside");
+    await Promise.all([
+      mkdir(path.join(projectRoot, "docs"), { recursive: true }),
+      mkdir(outsideRoot, { recursive: true }),
+    ]);
+    await writeFile(path.join(projectRoot, "docs", "review-guidelines.md"), "safe");
+    const outsideFile = path.join(outsideRoot, "escape.md");
+    await writeFile(outsideFile, "escape");
+    await symlink(outsideFile, path.join(projectRoot, "docs", "linked.md"));
+    const canonicalProjectRoot = await realpath(projectRoot);
+
+    const absolute = await resolveProjectContextFilePath(
+      canonicalProjectRoot,
+      path.join(projectRoot, "docs", "review-guidelines.md"),
+    );
+    expect(absolute.ok).toBe(false);
+    if (absolute.ok) throw new Error("expected absolute context path to fail");
+    expect(absolute.errors).toContainEqual(
+      expect.objectContaining({ code: "CONFIG_PATH_UNSAFE" }),
+    );
+
+    const traversing = await resolveProjectContextFilePath(
+      canonicalProjectRoot,
+      "docs/../docs/review-guidelines.md",
+    );
+    expect(traversing.ok).toBe(false);
+    if (traversing.ok) throw new Error("expected traversal context path to fail");
+    expect(traversing.errors).toContainEqual(
+      expect.objectContaining({ code: "CONFIG_PATH_UNSAFE" }),
+    );
+
+    const symlinkEscape = await resolveProjectContextFilePath(
+      canonicalProjectRoot,
+      "docs/linked.md",
+    );
+    expect(symlinkEscape.ok).toBe(false);
+    if (symlinkEscape.ok) throw new Error("expected symlink escape to fail");
+    expect(symlinkEscape.errors).toContainEqual(
+      expect.objectContaining({ code: "CONFIG_PATH_UNSAFE" }),
+    );
+  });
 });
 
 describe("config path access modes", () => {
@@ -269,6 +334,28 @@ describe("config path access modes", () => {
     expect(fsPromisesMocks.access).toHaveBeenCalledWith(
       canonicalProjectRoot,
       constants.R_OK | constants.X_OK,
+    );
+  });
+
+  it("checks project context files with read access only", async () => {
+    const root = await tempRoot();
+    const projectRoot = path.join(root, "project");
+    await mkdir(projectRoot, { recursive: true });
+    const contextPath = path.join(projectRoot, "README.md");
+    await writeFile(contextPath, "readme");
+    const canonicalProjectRoot = await realpath(projectRoot);
+    const canonicalContextPath = await realpath(contextPath);
+
+    const result = await resolveProjectContextFilePath(
+      canonicalProjectRoot,
+      "README.md",
+    );
+
+    expect(result.ok).toBe(true);
+    expect(fsPromisesMocks.access).toHaveBeenCalledTimes(1);
+    expect(fsPromisesMocks.access).toHaveBeenCalledWith(
+      canonicalContextPath,
+      constants.R_OK,
     );
   });
 });

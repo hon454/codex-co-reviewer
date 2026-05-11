@@ -3,6 +3,7 @@ import { parseDocument } from "yaml";
 import { makeConfigError, type ConfigError } from "./errors.js";
 import {
   createPathResolver,
+  resolveProjectContextFilePath,
   resolveProjectLocalPath,
   resolveToolOwnedPath,
   type PathResolverInput,
@@ -103,11 +104,36 @@ export async function loadConfigFromFile(
       );
     }
 
-    if (promptFile.ok && localPath.ok) {
+    const contextFiles: string[] = [];
+    if (localPath.ok) {
+      for (const [contextIndex, contextFile] of project.contextFiles.entries()) {
+        const resolvedContextFile = await resolveProjectContextFilePath(
+          localPath.value,
+          contextFile,
+        );
+        if (resolvedContextFile.ok) {
+          contextFiles.push(resolvedContextFile.value);
+        } else {
+          pathErrors.push(
+            ...remapPathErrors(
+              resolvedContextFile.errors,
+              ["projects", index, "contextFiles", contextIndex],
+              {
+                projectId: project.id,
+                index,
+              },
+            ),
+          );
+        }
+      }
+    }
+
+    if (promptFile.ok && localPath.ok && contextFiles.length === project.contextFiles.length) {
       resolvedProjects.push({
         ...project,
         promptFile: promptFile.value,
         localPath: localPath.value,
+        contextFiles,
       });
     }
   }

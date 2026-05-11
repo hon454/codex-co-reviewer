@@ -36,6 +36,7 @@ describe("config errors", () => {
       "Authorization: Basic dXNlcjpwYXNz",
       "Fine-grained token github_pat_11ABCDEFGabcdefghiJKLM_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456",
       "OPENAI_API_KEY=sk-test_abcdefghijklmnopqrstuvwxyz",
+      "DB_PASSWORD=correct-horse-battery-staple",
       "/Users/van/private/repo/config.yaml",
       "prompt: use token ghp_secretsecretsecretsecretsecret",
     ].join("\n");
@@ -46,6 +47,7 @@ describe("config errors", () => {
     expect(redacted).not.toContain("dXNlcjpwYXNz");
     expect(redacted).not.toContain("github_pat_11ABCDEFGabcdefghiJKLM_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456");
     expect(redacted).not.toContain("sk-test_abcdefghijklmnopqrstuvwxyz");
+    expect(redacted).not.toContain("correct-horse-battery-staple");
     expect(redacted).not.toContain("/Users/van/private");
     expect(redacted).not.toContain("use token");
     expect(redacted).toContain("[REDACTED_AUTHORIZATION]");
@@ -77,5 +79,17 @@ describe("config errors", () => {
     expect(error.redactedMessage).not.toContain("/Volumes/private");
     expect(error.redactedMessage).not.toContain(String.raw`C:\Users\alice\private`);
     expect(error.redactedMessage).not.toContain("C:/Users/alice/private");
+  });
+
+  it("redacts local paths containing spaces without leaking suffixes", () => {
+    const redacted = redactForDisplay(
+      "Config path /Users/van/My Project/config.yaml is not readable. See https://example.com/My Project/config.yaml",
+    );
+    const localPathClause = redacted.slice(0, redacted.indexOf(" See "));
+
+    expect(redacted).toContain("[REDACTED_PATH]");
+    expect(localPathClause).not.toContain("/Users/van/My Project/config.yaml");
+    expect(localPathClause).not.toContain("Project/config.yaml");
+    expect(redacted).toContain("https://example.com/My Project/config.yaml");
   });
 });

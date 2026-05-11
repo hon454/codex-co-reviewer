@@ -63,6 +63,11 @@ operation that reads, copies, or runs commands from them. Worktrees are created
 under the tool's data directory, not inside the user's normal working
 directories.
 
+Project context files, such as `projects[].contextFiles`, are project-relative
+paths resolved against the canonical `projects[].localPath`. They must not be
+absolute, traverse through normalization surprises, escape the project root
+through symlinks, or be unreadable.
+
 ## Project Profiles
 
 Each project profile binds a stable project `id` to a single repository and a

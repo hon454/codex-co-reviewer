@@ -127,6 +127,70 @@ export async function resolveProjectLocalPath(
   }
 }
 
+export async function resolveProjectContextFilePath(
+  canonicalProjectRoot: string,
+  configuredPath: string,
+): Promise<ConfigResult<string>> {
+  if (path.isAbsolute(configuredPath)) {
+    return pathError(
+      "CONFIG_PATH_UNSAFE",
+      configuredPath,
+      "Project context file path must be relative to the project local path.",
+    );
+  }
+
+  if (hasNormalizationSurprise(configuredPath)) {
+    return pathError(
+      "CONFIG_PATH_UNSAFE",
+      configuredPath,
+      "Project context file path must not contain traversal or normalization surprises.",
+    );
+  }
+
+  let canonicalRoot: string;
+  try {
+    canonicalRoot = await realpath(canonicalProjectRoot);
+  } catch {
+    return pathError(
+      "CONFIG_PATH_NOT_FOUND",
+      configuredPath,
+      "Project local path does not exist or is not accessible.",
+    );
+  }
+
+  const candidate = path.resolve(canonicalRoot, configuredPath);
+
+  if (!isWithinOrEqual(canonicalRoot, candidate)) {
+    return pathError(
+      "CONFIG_PATH_UNSAFE",
+      configuredPath,
+      "Project context file path escapes the project local path before symlink resolution.",
+    );
+  }
+
+  let canonicalCandidate: string;
+  try {
+    canonicalCandidate = await realpath(candidate);
+    await access(canonicalCandidate, constants.R_OK);
+  } catch {
+    return pathError(
+      "CONFIG_PATH_NOT_FOUND",
+      configuredPath,
+      "Project context file path does not exist or is not accessible.",
+    );
+  }
+
+  if (!isWithinOrEqual(canonicalRoot, canonicalCandidate)) {
+    return pathError(
+      "CONFIG_PATH_UNSAFE",
+      configuredPath,
+      "Project context file path escapes the project local path after symlink resolution.",
+    );
+  }
+
+  return { ok: true, value: canonicalCandidate };
+}
+
 function pathError(
   code: "CONFIG_PATH_NOT_ABSOLUTE" | "CONFIG_PATH_NOT_FOUND" | "CONFIG_PATH_UNSAFE",
   configuredPath: string,

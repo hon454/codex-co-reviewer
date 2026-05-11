@@ -1,4 +1,12 @@
-import { mkdir, mkdtemp, readFile, realpath, writeFile } from "node:fs/promises";
+import {
+  cp,
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -21,14 +29,16 @@ async function materializeConfig(
   const stateRoot = path.join(root, "state");
   const logRoot = path.join(root, "log");
   const profileRoot = path.join(configRoot, "profiles", "alpha");
+  const sourceRepoRoot = path.join(root, "source-repo");
   await Promise.all([
     mkdir(profileRoot, { recursive: true }),
     mkdir(dataRoot, { recursive: true }),
     mkdir(stateRoot, { recursive: true }),
     mkdir(logRoot, { recursive: true }),
   ]);
+  await cp(fixtureSourceRepo, sourceRepoRoot, { recursive: true });
 
-  const sourceRepo = await realpath(fixtureSourceRepo);
+  const sourceRepo = await realpath(sourceRepoRoot);
   const configContents = contents ?? (await readFile(fixtureConfig, "utf8"));
   await writeFile(
     path.join(configRoot, "config.yaml"),
@@ -65,7 +75,106 @@ describe("YAML config loader", () => {
     expect(result.value.projects[0]?.id).toBe("alpha");
     expect(result.value.projects[0]?.promptFile).toBe(promptPath);
     expect(result.value.projects[0]?.localPath).toBe(sourceRepo);
+    expect(result.value.projects[0]?.contextFiles).toEqual([]);
     expect(result.value.projects[0]?.policy.autoApprove).toBe(false);
+  });
+
+  it("resolves project context files relative to the canonical project root", async () => {
+    const contents = [
+      "github:",
+      "  username: fixture-user",
+      "projects:",
+      "  - id: alpha",
+      "    repo: owner/repo",
+      "    localPath: __FIXTURE_SOURCE_REPO__",
+      "    promptFile: profiles/alpha/review.md",
+      "    contextFiles:",
+      "      - README.md",
+      "",
+    ].join("\n");
+    const { configPath, roots, sourceRepo } = await materializeConfig(contents);
+    const contextFile = await realpath(path.join(sourceRepo, "README.md"));
+
+    const result = await loadConfigFromFile(configPath, roots);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected config to load");
+    expect(result.value.projects[0]?.contextFiles).toEqual([contextFile]);
+  });
+
+  it("remaps project context file path errors with project metadata", async () => {
+    const contents = [
+      "github:",
+      "  username: fixture-user",
+      "projects:",
+      "  - id: alpha",
+      "    repo: owner/repo",
+      "    localPath: __FIXTURE_SOURCE_REPO__",
+      "    promptFile: profiles/alpha/review.md",
+      "    contextFiles:",
+      "      - README.md",
+      "      - docs/missing.md",
+      "",
+    ].join("\n");
+    const { configPath, roots } = await materializeConfig(contents);
+
+    const result = await loadConfigFromFile(configPath, roots);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected config to fail");
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({
+        code: "CONFIG_PATH_NOT_FOUND",
+        path: ["projects", 0, "contextFiles", 1],
+        metadata: expect.objectContaining({ projectId: "alpha", index: 0 }),
+      }),
+    );
+  });
+
+  it("rejects unsafe project context file paths", async () => {
+    const { configPath, roots, sourceRepo } = await materializeConfig();
+    const outside = path.join(path.dirname(sourceRepo), "outside.md");
+    await writeFile(outside, "outside");
+    await symlink(outside, path.join(sourceRepo, "linked-outside.md"));
+    const unsafeConfig = [
+      "github:",
+      "  username: fixture-user",
+      "projects:",
+      "  - id: alpha",
+      "    repo: owner/repo",
+      "    localPath: __FIXTURE_SOURCE_REPO__",
+      "    promptFile: profiles/alpha/review.md",
+      "    contextFiles:",
+      `      - ${path.join(sourceRepo, "README.md")}`,
+      "      - docs/../README.md",
+      "      - linked-outside.md",
+      "",
+    ].join("\n");
+    await writeFile(
+      configPath,
+      unsafeConfig.replace("__FIXTURE_SOURCE_REPO__", sourceRepo),
+    );
+
+    const result = await loadConfigFromFile(configPath, roots);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected config to fail");
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "CONFIG_PATH_UNSAFE",
+          path: ["projects", 0, "contextFiles", 0],
+        }),
+        expect.objectContaining({
+          code: "CONFIG_PATH_UNSAFE",
+          path: ["projects", 0, "contextFiles", 1],
+        }),
+        expect.objectContaining({
+          code: "CONFIG_PATH_UNSAFE",
+          path: ["projects", 0, "contextFiles", 2],
+        }),
+      ]),
+    );
   });
 
   it("returns redacted YAML parse errors", async () => {
