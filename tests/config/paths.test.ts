@@ -65,6 +65,31 @@ describe("config path resolution", () => {
     );
   });
 
+  it("rejects absolute tool-owned paths even when inside the selected root", async () => {
+    const root = await tempRoot();
+    const configRoot = path.join(root, "config");
+    const dataRoot = path.join(root, "data");
+    const stateRoot = path.join(root, "state");
+    const logRoot = path.join(root, "log");
+    await Promise.all([
+      mkdir(path.join(configRoot, "profiles", "alpha"), { recursive: true }),
+      mkdir(dataRoot, { recursive: true }),
+      mkdir(stateRoot, { recursive: true }),
+      mkdir(logRoot, { recursive: true }),
+    ]);
+    const promptPath = path.join(configRoot, "profiles", "alpha", "review.md");
+    await writeFile(promptPath, "review guidance");
+
+    const resolver = createPathResolver({ configRoot, dataRoot, stateRoot, logRoot });
+    const result = await resolveToolOwnedPath(resolver, "config", promptPath);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected absolute tool-owned path to be rejected");
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: "CONFIG_PATH_UNSAFE" }),
+    );
+  });
+
   it("rejects symlink escapes from tool-owned roots", async () => {
     const root = await tempRoot();
     const configRoot = path.join(root, "config");

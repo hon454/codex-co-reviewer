@@ -33,9 +33,15 @@ export async function resolveToolOwnedPath(
   configuredPath: string,
 ): Promise<ConfigResult<string>> {
   const root = resolver.roots[rootName];
-  const candidate = path.isAbsolute(configuredPath)
-    ? path.resolve(configuredPath)
-    : path.resolve(root, configuredPath);
+  if (path.isAbsolute(configuredPath)) {
+    return pathError(
+      "CONFIG_PATH_UNSAFE",
+      configuredPath,
+      `Configured ${rootName} path must be relative to the selected root.`,
+    );
+  }
+
+  const candidate = path.resolve(root, configuredPath);
 
   if (!isWithinOrEqual(root, candidate)) {
     return pathError(
