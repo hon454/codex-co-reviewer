@@ -42,6 +42,14 @@ export async function resolveToolOwnedPath(
     );
   }
 
+  if (hasNormalizationSurprise(configuredPath)) {
+    return pathError(
+      "CONFIG_PATH_UNSAFE",
+      configuredPath,
+      `Configured ${rootName} path must not contain traversal or normalization surprises.`,
+    );
+  }
+
   const candidate = path.resolve(root, configuredPath);
 
   if (!isWithinOrEqual(root, candidate)) {

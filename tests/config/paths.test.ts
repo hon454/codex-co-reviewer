@@ -88,6 +88,37 @@ describe("config path resolution", () => {
     );
   });
 
+  it("rejects tool-owned traversal even when it normalizes within the selected root", async () => {
+    const root = await tempRoot();
+    const configRoot = path.join(root, "config");
+    const dataRoot = path.join(root, "data");
+    const stateRoot = path.join(root, "state");
+    const logRoot = path.join(root, "log");
+    await Promise.all([
+      mkdir(path.join(configRoot, "profiles", "alpha"), { recursive: true }),
+      mkdir(dataRoot, { recursive: true }),
+      mkdir(stateRoot, { recursive: true }),
+      mkdir(logRoot, { recursive: true }),
+    ]);
+    await writeFile(
+      path.join(configRoot, "profiles", "alpha", "review.md"),
+      "review guidance",
+    );
+
+    const resolver = createPathResolver({ configRoot, dataRoot, stateRoot, logRoot });
+    const result = await resolveToolOwnedPath(
+      resolver,
+      "config",
+      "profiles/alpha/../alpha/review.md",
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected in-root traversal to be rejected");
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: "CONFIG_PATH_UNSAFE" }),
+    );
+  });
+
   it("rejects absolute tool-owned paths even when inside the selected root", async () => {
     const root = await tempRoot();
     const configRoot = path.join(root, "config");
