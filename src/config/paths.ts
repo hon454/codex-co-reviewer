@@ -1,3 +1,4 @@
+import { constants } from "node:fs";
 import { access, realpath } from "node:fs/promises";
 import path from "node:path";
 import { makeConfigError } from "./errors.js";
@@ -56,7 +57,7 @@ export async function resolveToolOwnedPath(
   try {
     canonicalRoot = await realpath(root);
     canonicalCandidate = await realpath(candidate);
-    await access(canonicalCandidate);
+    await access(canonicalCandidate, constants.R_OK);
   } catch {
     return pathError(
       "CONFIG_PATH_NOT_FOUND",
@@ -100,7 +101,7 @@ export async function resolveProjectLocalPath(
       path.normalize(configuredPath),
     );
     const canonicalPath = await realpath(configuredPath);
-    await access(canonicalPath);
+    await access(canonicalPath, constants.R_OK | constants.X_OK);
     if (normalizedConfiguredPath !== stripTrailingSeparators(canonicalPath)) {
       return pathError(
         "CONFIG_PATH_UNSAFE",
