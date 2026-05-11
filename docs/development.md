@@ -94,15 +94,18 @@ data directories, not in this repository.
 
 ## Required Verification
 
-Until an executable product test suite exists, documentation-only harness
-changes use:
+Product and documentation changes use the single local verification command:
 
 ```sh
-git status --short --ignored
+npm run verify
+```
+
+For documentation-only harness work, also scan durable docs for unfinished
+placeholders:
+
+```sh
 rg --no-ignore -n "T[B]D|T[O]DO|fill[[:space:]]+in|implement[[:space:]]+later" AGENTS.md README.md docs .github || true
 ```
 
-Task-specific verification may add file existence checks, rendered document
-checks, or targeted read-through commands. When product implementation starts,
-replace the placeholder verification in `AGENTS.md` with the single local
-verification command and keep this document aligned.
+Task-specific verification may add targeted read-through commands, fixture
+checks, or rendered document checks.

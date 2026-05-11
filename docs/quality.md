@@ -17,12 +17,12 @@ For product implementation, done also means:
 - Artifacts are redacted according to policy before persistence.
 - Idempotency invariants are demonstrated for repeated polling and retries.
 
-## Future Test Strategy
+## Test Strategy
 
-The first executable test suite should be fixture-first and deterministic.
-Tests should exercise policy and orchestration without live GitHub or live Codex
-dependencies. Live integration checks can exist later, but they must be
-opt-in and clearly separated from local verification.
+The first executable test suite is fixture-first and deterministic. Config-core
+tests exercise policy and local validation without live GitHub or live Codex
+dependencies. Live integration checks can exist later, but they must be opt-in
+and clearly separated from local verification.
 
 Priority test layers:
 

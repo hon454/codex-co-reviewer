@@ -29,16 +29,18 @@ Merge decisions are user-owned.
 
 ## Required Verification
 
-This repository has no executable product test suite yet. Until one exists,
-verification for documentation-only harness changes is:
+Run the single local verification command before reporting product code changes
+complete:
 
 ```sh
-git status --short --ignored
-rg --no-ignore -n "T[B]D|T[O]DO|fill[[:space:]]+in|implement[[:space:]]+later" AGENTS.md README.md docs .github || true
+npm run verify
 ```
 
-When product implementation starts, replace this section with the single local
-verification command and keep it current.
+Documentation-only harness changes may also run:
+
+```sh
+rg --no-ignore -n "T[B]D|T[O]DO|fill[[:space:]]+in|implement[[:space:]]+later" AGENTS.md README.md docs .github || true
+```
 
 ## Durable Knowledge
 
