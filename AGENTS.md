@@ -46,6 +46,10 @@ rg --no-ignore -n "T[B]D|T[O]DO|fill[[:space:]]+in|implement[[:space:]]+later" A
 ## Durable Knowledge
 
 - Durable harness docs live in `docs/`.
+- Product specs live in `docs/specs/` and should be written before durable
+  implementation plans for new behavior.
+- Durable implementation plans live in `docs/plans/` and should explicitly
+  link the spec or specs they implement.
 - Contract docs live in `docs/contracts/`.
 - Architecture decisions live in `docs/adr/`.
 - Local Superpowers workflow artifacts under `docs/superpowers/` are ignored by

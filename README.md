@@ -21,6 +21,8 @@ This repository uses a contract-first harness for Codex-led development.
 - `docs/development.md` describes the Codex operating loop.
 - `docs/quality.md` defines completion and verification standards.
 - `docs/threat-model.md` tracks product-specific risks.
+- `docs/specs/` records durable product specs before implementation plans.
+- `docs/plans/` records durable implementation plans that link back to specs.
 - `docs/contracts/` contains safety contracts that implementation must preserve.
 - `docs/adr/` records important decisions.
 
