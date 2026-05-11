@@ -47,6 +47,21 @@ describe("config schema and defaults", () => {
     expect(result.errors.map((error) => error.code)).toContain("CONFIG_INVALID_REPO");
   });
 
+  it("maps non-string repository identifiers to schema invalid", () => {
+    const result = buildEffectiveConfig({
+      projects: [{ ...minimalConfig.projects[0], repo: 123 }],
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected invalid config");
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({
+        code: "CONFIG_SCHEMA_INVALID",
+        path: ["projects", 0, "repo"],
+      }),
+    );
+  });
+
   it("rejects duplicate project ids", () => {
     const result = buildEffectiveConfig({
       projects: [
@@ -68,6 +83,21 @@ describe("config schema and defaults", () => {
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected invalid config");
     expect(result.errors.map((error) => error.code)).toContain("CONFIG_INVALID_PROJECT_ID");
+  });
+
+  it("maps non-string project ids to schema invalid", () => {
+    const result = buildEffectiveConfig({
+      projects: [{ ...minimalConfig.projects[0], id: 123 }],
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected invalid config");
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({
+        code: "CONFIG_SCHEMA_INVALID",
+        path: ["projects", 0, "id"],
+      }),
+    );
   });
 
   it("rejects invalid timeout, retention, and concurrency bounds", () => {

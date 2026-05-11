@@ -285,11 +285,11 @@ function pathIncludes(path: (string | number)[], segment: string): boolean {
 }
 
 function codeForIssue(issue: z.ZodIssue): ConfigErrorCode {
-  if (pathIncludes(issue.path, "repo")) {
+  if (issue.code === z.ZodIssueCode.invalid_string && pathIncludes(issue.path, "repo")) {
     return "CONFIG_INVALID_REPO";
   }
 
-  if (pathIncludes(issue.path, "id")) {
+  if (issue.code === z.ZodIssueCode.invalid_string && pathIncludes(issue.path, "id")) {
     return "CONFIG_INVALID_PROJECT_ID";
   }
 
