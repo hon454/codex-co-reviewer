@@ -85,6 +85,16 @@ describe("config schema and defaults", () => {
     expect(result.errors.map((error) => error.code)).toContain("CONFIG_INVALID_PROJECT_ID");
   });
 
+  it("rejects uppercase project ids to prevent filesystem case collisions", () => {
+    const result = buildEffectiveConfig({
+      projects: [{ ...minimalConfig.projects[0], id: "Alpha" }],
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("expected invalid config");
+    expect(result.errors.map((error) => error.code)).toContain("CONFIG_INVALID_PROJECT_ID");
+  });
+
   it("maps non-string project ids to schema invalid", () => {
     const result = buildEffectiveConfig({
       projects: [{ ...minimalConfig.projects[0], id: 123 }],

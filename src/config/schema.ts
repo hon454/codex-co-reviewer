@@ -13,7 +13,7 @@ export type ConfigResult<T> =
 
 export const REPO_IDENTIFIER_PATTERN =
   /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
-export const PROJECT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_.-]*$/;
+export const PROJECT_ID_PATTERN = /^[a-z0-9][a-z0-9_.-]*$/;
 
 const positiveInteger = z.number().int().min(1);
 const nonNegativeInteger = z.number().int().min(0);
