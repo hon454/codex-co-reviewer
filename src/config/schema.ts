@@ -6,6 +6,7 @@ import {
   type ConfigErrorPathSegment,
   makeConfigError,
 } from "./errors.js";
+import { enforcePolicyInvariants } from "./policy.js";
 
 export type ConfigResult<T> =
   | { ok: true; value: T }
@@ -53,7 +54,7 @@ export const rawProjectSchema = z
     policy: z
       .object({
         skipDraft: z.literal(true).default(DEFAULT_CONFIG.project.policy.skipDraft),
-        autoApprove: z.literal(false).default(DEFAULT_CONFIG.project.policy.autoApprove),
+        autoApprove: z.boolean().default(DEFAULT_CONFIG.project.policy.autoApprove),
         duplicateReviewBehavior: z
           .literal("skip_same_head_sha")
           .default(DEFAULT_CONFIG.project.policy.duplicateReviewBehavior),
@@ -72,16 +73,14 @@ export const rawProjectSchema = z
           .literal(true)
           .default(DEFAULT_CONFIG.project.rereview.requiresHeadShaChanged),
         sameHeadShaBehavior: z
-          .literal("skip_and_log")
+          .string()
           .default(DEFAULT_CONFIG.project.rereview.sameHeadShaBehavior),
       })
       .strict()
       .default(DEFAULT_CONFIG.project.rereview),
     setup: z
       .object({
-        onFailure: z
-          .literal("log_only_skip_review")
-          .default(DEFAULT_CONFIG.project.setup.onFailure),
+        onFailure: z.string().default(DEFAULT_CONFIG.project.setup.onFailure),
         commands: z.array(commandSchema).default([...DEFAULT_CONFIG.project.setup.commands]),
       })
       .strict()
@@ -153,7 +152,7 @@ export const rawProjectSchema = z
               DEFAULT_CONFIG.project.confidence.low.maxPerReview,
             ),
             contributesToDecision: z
-              .literal(false)
+              .boolean()
               .default(DEFAULT_CONFIG.project.confidence.low.contributesToDecision),
             allowInlineQuestionOverride: z
               .boolean()
@@ -216,7 +215,7 @@ export const rawConfigSchema = z
         stopBehavior: z.literal("fast").default(DEFAULT_CONFIG.daemon.stopBehavior),
         stopGraceSeconds: positiveInteger.default(DEFAULT_CONFIG.daemon.stopGraceSeconds),
         noGithubWriteAfterStopRequested: z
-          .literal(true)
+          .boolean()
           .default(DEFAULT_CONFIG.daemon.noGithubWriteAfterStopRequested),
       })
       .strict()
@@ -263,7 +262,7 @@ export const rawConfigSchema = z
       .object({
         store: z.boolean().default(DEFAULT_CONFIG.artifacts.store),
         storeInput: z.boolean().default(DEFAULT_CONFIG.artifacts.storeInput),
-        redaction: z.literal(true).default(DEFAULT_CONFIG.artifacts.redaction),
+        redaction: z.boolean().default(DEFAULT_CONFIG.artifacts.redaction),
         retentionDays: positiveInteger.default(DEFAULT_CONFIG.artifacts.retentionDays),
       })
       .strict()
@@ -368,8 +367,10 @@ export function buildEffectiveConfig(input: unknown): ConfigResult<EffectiveConf
   }
 
   const duplicateErrors = duplicateProjectIdErrors(parsed.data);
-  if (duplicateErrors.length > 0) {
-    return { ok: false, errors: duplicateErrors };
+  const policyErrors = enforcePolicyInvariants(parsed.data);
+  const errors = [...duplicateErrors, ...policyErrors];
+  if (errors.length > 0) {
+    return { ok: false, errors };
   }
 
   return { ok: true, value: parsed.data };
